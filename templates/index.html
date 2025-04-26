@@ -1,4 +1,4 @@
-<!-- templates/index.html -->
+<!-- templates/index.html - Updated URLs -->
 {% extends 'base.html' %}
 
 {% block title %}Home{% endblock %}
@@ -10,8 +10,8 @@
             <h1 class="display-4 mb-4">Welcome to Money Manager</h1>
             <p class="lead mb-5">Take control of your finances with our easy-to-use money management application. Track expenses, monitor income, and set savings goals all in one place.</p>
             <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 gap-3">Get Started</a>
-                <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4 gap-3">Get Started</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg px-4">Login</a>
             </div>
         </div>
     </div>
