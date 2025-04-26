@@ -3,7 +3,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 app = Flask(__name__)
@@ -82,6 +82,24 @@ class Category(db.Model):
 
     def __repr__(self):
         return f"<Category {self.name} ({self.type})>"
+
+
+class RecurringTransaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(10), nullable=False)  # 'expense' or 'income'
+    amount = db.Column(db.Float, nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.String(200))
+    frequency = db.Column(db.String(20), nullable=False)  # 'daily', 'weekly', 'monthly', 'yearly'
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime)
+    last_created = db.Column(db.DateTime)
+    next_date = db.Column(db.DateTime, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # Relationship with User model
+    user = db.relationship('User', backref=db.backref('recurring_transactions', lazy=True))
+
 
 # Routes
 @app.route('/')
@@ -872,6 +890,208 @@ def delete_category(id):
         flash('Something went wrong. Please try again.')
 
     return redirect(url_for('categories'))
+
+
+@app.route('/recurring')
+def recurring_transactions():
+    if 'user_id' not in session:
+        flash('Please login first.')
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    recurring = RecurringTransaction.query.filter_by(user_id=user_id).all()
+    return render_template('recurring.html', recurring=recurring)
+
+
+@app.route('/recurring/add', methods=['GET', 'POST'])
+def add_recurring():
+    if 'user_id' not in session:
+        flash('Please login first.')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        type = request.form['type']
+        amount = float(request.form['amount'])
+        category = request.form['category']
+        description = request.form['description']
+        frequency = request.form['frequency']
+        start_date_str = request.form['start_date']
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        end_date_str = request.form.get('end_date', '')
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d') if end_date_str else None
+
+        # Calculate next date based on frequency and start date
+        next_date = calculate_next_date(start_date, frequency)
+
+        new_recurring = RecurringTransaction(
+            type=type,
+            amount=amount,
+            category=category,
+            description=description,
+            frequency=frequency,
+            start_date=start_date,
+            end_date=end_date,
+            next_date=next_date,
+            user_id=session['user_id']
+        )
+
+        try:
+            db.session.add(new_recurring)
+            db.session.commit()
+            flash('Recurring transaction added successfully!')
+            return redirect(url_for('recurring_transactions'))
+        except:
+            flash('Something went wrong. Please try again.')
+
+    return render_template('add_recurring.html')
+
+
+@app.route('/recurring/edit/<int:id>', methods=['GET', 'POST'])
+def edit_recurring(id):
+    if 'user_id' not in session:
+        flash('Please login first.')
+        return redirect(url_for('login'))
+
+    recurring = RecurringTransaction.query.get_or_404(id)
+
+    # Make sure the recurring transaction belongs to the logged-in user
+    if recurring.user_id != session['user_id']:
+        flash('Unauthorized access.')
+        return redirect(url_for('recurring_transactions'))
+
+    if request.method == 'POST':
+        recurring.type = request.form['type']
+        recurring.amount = float(request.form['amount'])
+        recurring.category = request.form['category']
+        recurring.description = request.form['description']
+        recurring.frequency = request.form['frequency']
+
+        start_date_str = request.form['start_date']
+        recurring.start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+
+        end_date_str = request.form.get('end_date', '')
+        recurring.end_date = datetime.strptime(end_date_str, '%Y-%m-%d') if end_date_str else None
+
+        # Recalculate next date if needed
+        if recurring.next_date < datetime.now():
+            recurring.next_date = calculate_next_date(recurring.start_date, recurring.frequency)
+
+        try:
+            db.session.commit()
+            flash('Recurring transaction updated successfully!')
+            return redirect(url_for('recurring_transactions'))
+        except:
+            flash('Something went wrong. Please try again.')
+
+    return render_template('edit_recurring.html', recurring=recurring)
+
+
+@app.route('/recurring/delete/<int:id>')
+def delete_recurring(id):
+    if 'user_id' not in session:
+        flash('Please login first.')
+        return redirect(url_for('login'))
+
+    recurring = RecurringTransaction.query.get_or_404(id)
+
+    # Make sure the recurring transaction belongs to the logged-in user
+    if recurring.user_id != session['user_id']:
+        flash('Unauthorized access.')
+        return redirect(url_for('recurring_transactions'))
+
+    try:
+        db.session.delete(recurring)
+        db.session.commit()
+        flash('Recurring transaction deleted successfully!')
+    except:
+        flash('Something went wrong. Please try again.')
+
+    return redirect(url_for('recurring_transactions'))
+
+
+@app.route('/process_recurring_transactions')
+def process_recurring_transactions():
+    if 'user_id' not in session:
+        flash('Please login first.')
+        return redirect(url_for('login'))
+
+    today = datetime.now()
+    recurring_transactions = RecurringTransaction.query.filter(
+        RecurringTransaction.next_date <= today
+    ).all()
+
+    transactions_created = 0
+
+    for transaction in recurring_transactions:
+        # Skip if end date is set and we've passed it
+        if transaction.end_date and transaction.end_date < today:
+            continue
+
+        # Create the appropriate transaction type
+        if transaction.type == 'expense':
+            new_transaction = Expense(
+                amount=transaction.amount,
+                category=transaction.category,
+                description=transaction.description,
+                date=transaction.next_date,
+                user_id=transaction.user_id
+            )
+        else:  # income
+            new_transaction = Income(
+                amount=transaction.amount,
+                source=transaction.category,
+                description=transaction.description,
+                date=transaction.next_date,
+                user_id=transaction.user_id
+            )
+
+        db.session.add(new_transaction)
+
+        # Update next date for the recurring transaction
+        transaction.last_created = transaction.next_date
+        transaction.next_date = calculate_next_date(transaction.next_date, transaction.frequency)
+
+        transactions_created += 1
+
+    try:
+        db.session.commit()
+        flash(f'Successfully created {transactions_created} transactions.')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error processing recurring transactions: {str(e)}')
+
+    return redirect(url_for('recurring_transactions'))
+
+
+def calculate_next_date(start_date, frequency):
+    """Calculate the next date based on frequency and start date."""
+    today = datetime.now()
+    if today < start_date:
+        return start_date
+
+    next_date = start_date
+    if frequency == 'daily':
+        while next_date <= today:
+            next_date += timedelta(days=1)
+    elif frequency == 'weekly':
+        while next_date <= today:
+            next_date += timedelta(weeks=1)
+    elif frequency == 'monthly':
+        while next_date <= today:
+            month = next_date.month % 12 + 1
+            year = next_date.year + (next_date.month // 12)
+            day = min(next_date.day,
+                      [31, 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28, 31, 30, 31, 30, 31, 31,
+                       30, 31, 30, 31][month - 1])
+            next_date = datetime(year, month, day)
+    elif frequency == 'yearly':
+        while next_date <= today:
+            try:
+                next_date = datetime(next_date.year + 1, next_date.month, next_date.day)
+            except ValueError:  # Handle Feb 29 in leap years
+                next_date = datetime(next_date.year + 1, next_date.month, 28)
+
+    return next_date
 
 
 if __name__ == '__main__':
