@@ -1,0 +1,64 @@
+<!-- templates/savings.html -->
+{% extends 'base.html' %}
+
+{% block title %}Savings Goals{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Savings Goals</h1>
+    <a href="{{ url_for('add_savings_goal') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Add Goal
+    </a>
+</div>
+
+{% if savings_goals %}
+<div class="row">
+    {% for goal in savings_goals %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">{{ goal.name }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Progress:</span>
+                        <span>${{ "%.2f"|format(goal.current_amount) }} / ${{ "%.2f"|format(goal.target_amount) }}</span>
+                    </div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ (goal.current_amount / goal.target_amount) * 100 }}%"></div>
+                    </div>
+                    <div class="text-end mt-1">
+                        <small>{{ ((goal.current_amount / goal.target_amount) * 100)|round(1) }}% complete</small>
+                    </div>
+                </div>
+
+                {% if goal.target_date %}
+                <div class="mb-3">
+                    <strong>Target Date:</strong> {{ goal.target_date.strftime('%Y-%m-%d') }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('update_savings_progress', id=goal.id) }}" class="mt-4">
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" step="0.01" class="form-control" name="amount" placeholder="Add amount" required>
+                        <button type="submit" class="btn btn-success">Update Progress</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <p>No savings goals set yet. Create your first savings goal!</p>
+</div>
+<div class="text-center mt-4">
+    <a href="{{ url_for('add_savings_goal') }}" class="btn btn-primary btn-lg">
+        <i class="bi bi-plus-lg"></i> Create Your First Savings Goal
+    </a>
+</div>
+{% endif %}
+{% endblock %}
