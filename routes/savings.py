@@ -1,12 +1,12 @@
 # routes/savings.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
-from ..extensions import db
-from ..models import SavingsGoal
+from extensions import db
+from models import SavingsGoal
 
 savings_bp = Blueprint('savings', __name__)
 
-@app.route('/savings')
+@savings_bp.route('/savings')
 def savings():
     if 'user_id' not in session:
         flash('Please login first.')
@@ -17,7 +17,7 @@ def savings():
     return render_template('savings.html', savings_goals=savings_goals)
 
 
-@app.route('/savings/add', methods=['GET', 'POST'])
+@savings_bp.route('/savings/add', methods=['GET', 'POST'])
 def add_savings_goal():
     if 'user_id' not in session:
         flash('Please login first.')
@@ -49,7 +49,7 @@ def add_savings_goal():
     return render_template('add_savings_goal.html')
 
 
-@app.route('/savings/update/<int:id>', methods=['POST'])
+@savings_bp.route('/savings/update/<int:id>', methods=['POST'])
 def update_savings_progress(id):
     if 'user_id' not in session:
         flash('Please login first.')

@@ -2,12 +2,12 @@
 # routes/budget.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
-from ..extensions import db
-from ..models import Budget, Expense
+from extensions import db
+from models import Budget, Expense
 
 budget_bp = Blueprint('budget', __name__)
 
-@app.route('/budgets')
+@budget_bp.route('/budgets')
 def budgets():
     if 'user_id' not in session:
         flash('Please login first.')
@@ -67,7 +67,7 @@ def budgets():
                            current_year=current_year)
 
 
-@app.route('/budgets/set', methods=['POST'])
+@budget_bp.route('/budgets/set', methods=['POST'])
 def set_budget():
     if 'user_id' not in session:
         flash('Please login first.')
@@ -112,7 +112,7 @@ def set_budget():
     return redirect(url_for('budgets', month=month, year=year))
 
 
-@app.route('/budgets/delete/<int:id>')
+@budget_bp.route('/budgets/delete/<int:id>')
 def delete_budget(id):
     if 'user_id' not in session:
         flash('Please login first.')

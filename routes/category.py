@@ -1,12 +1,12 @@
 
 # routes/category.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from ..extensions import db
-from ..models import Category, Expense, Income
+from extensions import db
+from models import Category, Expense, Income
 
 category_bp = Blueprint('category', __name__)
 
-@app.route('/categories')
+@category_bp.route('/categories')
 def categories():
     if 'user_id' not in session:
         flash('Please login first.')
@@ -21,7 +21,7 @@ def categories():
                            income_categories=income_categories)
 
 
-@app.route('/categories/add', methods=['POST'])
+@category_bp.route('/categories/add', methods=['POST'])
 def add_category():
     if 'user_id' not in session:
         flash('Please login first.')
@@ -59,7 +59,7 @@ def add_category():
     return redirect(url_for('categories'))
 
 
-@app.route('/categories/delete/<int:id>')
+@category_bp.route('/categories/delete/<int:id>')
 def delete_category(id):
     if 'user_id' not in session:
         flash('Please login first.')

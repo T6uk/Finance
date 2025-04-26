@@ -9,7 +9,7 @@
 <!-- Month/Year Selector -->
 <div class="card mb-4">
     <div class="card-body">
-        <form method="GET" action="{{ url_for('budgets') }}" class="d-flex align-items-center">
+        <form method="GET" action="{{ url_for('budget.budgets') }}" class="d-flex align-items-center">
             <div class="me-3">
                 <label for="month" class="form-label">Month:</label>
                 <select id="month" name="month" class="form-select">
@@ -76,7 +76,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <a href="{{ url_for('delete_budget', id=budget.id) }}"
+                                    <a href="{{ url_for('budget.delete_budget', id=budget.id) }}"
                                        class="btn btn-sm btn-outline-danger"
                                        onclick="return confirm('Are you sure you want to delete this budget?')">
                                         <i class="bi bi-trash"></i>
@@ -102,7 +102,7 @@
                 <h5 class="mb-0">Set Budget</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('set_budget') }}">
+                <form method="POST" action="{{ url_for('budget.set_budget') }}">
                     <input type="hidden" name="month" value="{{ selected_month }}">
                     <input type="hidden" name="year" value="{{ selected_year }}">
 

@@ -1,15 +1,16 @@
+# routes/expense.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime, timedelta
-from ..extensions import db
-from ..models import Expense
+from extensions import db
+from models import Expense
 
 expense_bp = Blueprint('expense', __name__)
 
-@app.route('/expenses')
+@expense_bp.route('/expenses')
 def expenses():
     if 'user_id' not in session:
         flash('Please login first.')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     user_id = session['user_id']
 
@@ -56,12 +57,11 @@ def expenses():
                            filter_search=search_term)
 
 
-# routes/expense.py (continued from previous artifact)
-@app.route('/expenses/add', methods=['GET', 'POST'])
+@expense_bp.route('/expenses/add', methods=['GET', 'POST'])
 def add_expense():
     if 'user_id' not in session:
         flash('Please login first.')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     if request.method == 'POST':
         amount = float(request.form['amount'])
@@ -82,25 +82,25 @@ def add_expense():
             db.session.add(new_expense)
             db.session.commit()
             flash('Expense added successfully!')
-            return redirect(url_for('expenses'))
+            return redirect(url_for('expense.expenses'))
         except:
             flash('Something went wrong. Please try again.')
 
     return render_template('add_expense.html')
 
 
-@app.route('/expenses/edit/<int:id>', methods=['GET', 'POST'])
+@expense_bp.route('/expenses/edit/<int:id>', methods=['GET', 'POST'])
 def edit_expense(id):
     if 'user_id' not in session:
         flash('Please login first.')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     expense = Expense.query.get_or_404(id)
 
     # Make sure the expense belongs to the logged-in user
     if expense.user_id != session['user_id']:
         flash('Unauthorized access.')
-        return redirect(url_for('expenses'))
+        return redirect(url_for('expense.expenses'))
 
     if request.method == 'POST':
         expense.amount = float(request.form['amount'])
@@ -112,25 +112,25 @@ def edit_expense(id):
         try:
             db.session.commit()
             flash('Expense updated successfully!')
-            return redirect(url_for('expenses'))
+            return redirect(url_for('expense.expenses'))
         except:
             flash('Something went wrong. Please try again.')
 
     return render_template('edit_expense.html', expense=expense)
 
 
-@app.route('/expenses/delete/<int:id>')
+@expense_bp.route('/expenses/delete/<int:id>')
 def delete_expense(id):
     if 'user_id' not in session:
         flash('Please login first.')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     expense = Expense.query.get_or_404(id)
 
     # Make sure the expense belongs to the logged-in user
     if expense.user_id != session['user_id']:
         flash('Unauthorized access.')
-        return redirect(url_for('expenses'))
+        return redirect(url_for('expense.expenses'))
 
     try:
         db.session.delete(expense)
@@ -139,4 +139,4 @@ def delete_expense(id):
     except:
         flash('Something went wrong. Please try again.')
 
-    return redirect(url_for('expenses'))
+    return redirect(url_for('expense.expenses'))

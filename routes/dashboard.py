@@ -1,11 +1,11 @@
 # routes/dashboard.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime, timedelta
-from ..extensions import db
-from ..models import Expense, Income, SavingsGoal, Budget
+from extensions import db
+from models import Expense, Income, SavingsGoal, Budget
 
 dashboard_bp = Blueprint('dashboard', __name__)
-@app.route('/dashboard')
+@dashboard_bp.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
         flash('Please login first.')

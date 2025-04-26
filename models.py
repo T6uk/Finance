@@ -1,6 +1,6 @@
 # models.py
 from datetime import datetime
-from .extensions import db
+from extensions import db  # Changed from relative to absolute import
 
 
 class User(db.Model):

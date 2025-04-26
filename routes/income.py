@@ -1,26 +1,27 @@
+# routes/income.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
-from ..extensions import db
-from ..models import Income
+from extensions import db
+from models import Income
 
 income_bp = Blueprint('income', __name__)
 
-@app.route('/incomes')
+@income_bp.route('/incomes')
 def incomes():
     if 'user_id' not in session:
         flash('Please login first.')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     user_id = session['user_id']
     incomes = Income.query.filter_by(user_id=user_id).order_by(Income.date.desc()).all()
     return render_template('incomes.html', incomes=incomes)
 
 
-@app.route('/incomes/add', methods=['GET', 'POST'])
+@income_bp.route('/incomes/add', methods=['GET', 'POST'])
 def add_income():
     if 'user_id' not in session:
         flash('Please login first.')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     if request.method == 'POST':
         amount = float(request.form['amount'])
@@ -41,25 +42,25 @@ def add_income():
             db.session.add(new_income)
             db.session.commit()
             flash('Income added successfully!')
-            return redirect(url_for('incomes'))
+            return redirect(url_for('income.incomes'))
         except:
             flash('Something went wrong. Please try again.')
 
     return render_template('add_income.html')
 
 
-@app.route('/incomes/edit/<int:id>', methods=['GET', 'POST'])
+@income_bp.route('/incomes/edit/<int:id>', methods=['GET', 'POST'])
 def edit_income(id):
     if 'user_id' not in session:
         flash('Please login first.')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     income = Income.query.get_or_404(id)
 
     # Make sure the income entry belongs to the logged-in user
     if income.user_id != session['user_id']:
         flash('Unauthorized access.')
-        return redirect(url_for('incomes'))
+        return redirect(url_for('income.incomes'))
 
     if request.method == 'POST':
         income.amount = float(request.form['amount'])
@@ -71,25 +72,25 @@ def edit_income(id):
         try:
             db.session.commit()
             flash('Income updated successfully!')
-            return redirect(url_for('incomes'))
+            return redirect(url_for('income.incomes'))
         except:
             flash('Something went wrong. Please try again.')
 
     return render_template('edit_income.html', income=income)
 
 
-@app.route('/incomes/delete/<int:id>')
+@income_bp.route('/incomes/delete/<int:id>')
 def delete_income(id):
     if 'user_id' not in session:
         flash('Please login first.')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     income = Income.query.get_or_404(id)
 
     # Make sure the income entry belongs to the logged-in user
     if income.user_id != session['user_id']:
         flash('Unauthorized access.')
-        return redirect(url_for('incomes'))
+        return redirect(url_for('income.incomes'))
 
     try:
         db.session.delete(income)
@@ -98,4 +99,4 @@ def delete_income(id):
     except:
         flash('Something went wrong. Please try again.')
 
-    return redirect(url_for('incomes'))
+    return redirect(url_for('income.incomes'))

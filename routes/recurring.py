@@ -1,12 +1,12 @@
 # routes/recurring.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
-from ..extensions import db
-from ..models import RecurringTransaction, Expense, Income
-from ..utils import calculate_next_date
+from extensions import db
+from models import RecurringTransaction, Expense, Income
+from utils import calculate_next_date
 
 recurring_bp = Blueprint('recurring', __name__)
-@app.route('/recurring')
+@recurring_bp.route('/recurring')
 def recurring_transactions():
     if 'user_id' not in session:
         flash('Please login first.')
@@ -17,7 +17,7 @@ def recurring_transactions():
     return render_template('recurring.html', recurring=recurring)
 
 
-@app.route('/recurring/add', methods=['GET', 'POST'])
+@recurring_bp.route('/recurring/add', methods=['GET', 'POST'])
 def add_recurring():
     if 'user_id' not in session:
         flash('Please login first.')
@@ -60,7 +60,7 @@ def add_recurring():
     return render_template('add_recurring.html')
 
 
-@app.route('/recurring/edit/<int:id>', methods=['GET', 'POST'])
+@recurring_bp.route('/recurring/edit/<int:id>', methods=['GET', 'POST'])
 def edit_recurring(id):
     if 'user_id' not in session:
         flash('Please login first.')
@@ -100,7 +100,7 @@ def edit_recurring(id):
     return render_template('edit_recurring.html', recurring=recurring)
 
 
-@app.route('/recurring/delete/<int:id>')
+@recurring_bp.route('/recurring/delete/<int:id>')
 def delete_recurring(id):
     if 'user_id' not in session:
         flash('Please login first.')
@@ -123,7 +123,7 @@ def delete_recurring(id):
     return redirect(url_for('recurring_transactions'))
 
 
-@app.route('/process_recurring_transactions')
+@recurring_bp.route('/process_recurring_transactions')
 def process_recurring_transactions():
     if 'user_id' not in session:
         flash('Please login first.')
