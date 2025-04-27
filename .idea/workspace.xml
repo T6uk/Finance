@@ -5,19 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ff390ee1-19a1-4571-985b-2fef85b9792a" name="Changes" comment="init">
-      <change afterPath="$PROJECT_DIR$/templates/edit_savings_goal.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/budget.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/budget.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/category.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/category.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/expense.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/expense.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/income.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/income.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/routes/recurring.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/recurring.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/savings.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/savings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/budgets.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/budgets.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/categories.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/categories.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/dashboard.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/expenses.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/expenses.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/incomes.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/incomes.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/login.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/recurring.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/recurring.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/savings.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/savings.html" afterDir="false" />
     </list>
@@ -108,7 +103,7 @@
       <updated>1745517909466</updated>
       <workItem from="1745517911640" duration="3003000" />
       <workItem from="1745650991193" duration="3455000" />
-      <workItem from="1745760715395" duration="2919000" />
+      <workItem from="1745760715395" duration="5373000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -142,7 +137,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745655119493</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="init">
+      <option name="closed" value="true" />
+      <created>1745763703523</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1745763703523</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -164,6 +167,6 @@
     <option name="LAST_COMMIT_MESSAGE" value="init" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/raha2$app.coverage" NAME="app Coverage Results" MODIFIED="1745761324489" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/raha2$app.coverage" NAME="app Coverage Results" MODIFIED="1745766251973" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

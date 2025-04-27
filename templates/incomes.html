@@ -10,9 +10,9 @@
         <h1 class="mb-1">Income</h1>
         <p class="text-muted mb-0">Track and manage your earnings</p>
     </div>
-    <a href="{{ url_for('income.add_income') }}" class="btn btn-success">
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addIncomeModal">
         <i class="bi bi-plus-lg me-2"></i>Add Income
-    </a>
+    </button>
 </div>
 
 <!-- Stats Cards Row -->
@@ -133,14 +133,14 @@
                                 <label for="min_amount" class="form-label">Min Amount ($)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
-                                    <input type="number" step="0.01" class="form-control" id="min_amount" name="min_amount" value="{{ filter_min_amount or '' }}">
+                                    <input type="number" step="0.01" min="0.01" class="form-control" id="min_amount" name="min_amount" value="{{ filter_min_amount or '' }}">
                                 </div>
                             </div>
                             <div class="col-6">
                                 <label for="max_amount" class="form-label">Max Amount ($)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
-                                    <input type="number" step="0.01" class="form-control" id="max_amount" name="max_amount" value="{{ filter_max_amount or '' }}">
+                                    <input type="number" step="0.01" min="0.01" class="form-control" id="max_amount" name="max_amount" value="{{ filter_max_amount or '' }}">
                                 </div>
                             </div>
                         </div>
@@ -254,9 +254,9 @@
                             <a href="{{ url_for('income.incomes') }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-circle me-1"></i>Clear Filters
                             </a>
-                            <a href="{{ url_for('income.add_income') }}" class="btn btn-success">
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addIncomeModal">
                                 <i class="bi bi-plus-lg me-1"></i>Add Income
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -300,13 +300,63 @@
                         <h5>No data to visualize</h5>
                         <p class="text-muted">Add income entries to see visualizations and gain insights.</p>
 
-                        <a href="{{ url_for('income.add_income') }}" class="btn btn-success">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addIncomeModal">
                             <i class="bi bi-plus-lg me-1"></i>Add Your First Income Entry
-                        </a>
+                        </button>
                     </div>
                 </div>
                 {% endif %}
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Income Modal -->
+<div class="modal fade" id="addIncomeModal" tabindex="-1" aria-labelledby="addIncomeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addIncomeModalLabel">Add New Income</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('income.add_income') }}" id="addIncomeForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount ($)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                            <input type="number" step="0.01" min="0.01" class="form-control" id="amount" name="amount" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="source" class="form-label">Source</label>
+                        <select class="form-select" id="modal_source" name="source" required>
+                            <option value="" selected disabled>Select a source</option>
+                            {% for source in sources %}
+                            <option value="{{ source }}">{{ source }}</option>
+                            {% endfor %}
+                            <option value="Salary">Salary</option>
+                            <option value="Freelance">Freelance</option>
+                            <option value="Business">Business</option>
+                            <option value="Investment">Investment</option>
+                            <option value="Gift">Gift</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date" name="date" value="{{ now().strftime('%Y-%m-%d') }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Income</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -435,6 +485,12 @@
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
+
+    // Reset modal form when modal is closed
+    document.getElementById('addIncomeModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('addIncomeForm').reset();
+        document.getElementById('date').value = formatDate(new Date());
+    });
 
     {% if incomes %}
     // Prepare data for charts

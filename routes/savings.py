@@ -31,39 +31,38 @@ def savings():
                            overall_progress=overall_progress)
 
 
-@savings_bp.route('/savings/add', methods=['GET', 'POST'])
+@savings_bp.route('/savings/add', methods=['POST'])
 def add_savings_goal():
     if 'user_id' not in session:
         flash('Please login first.')
         return redirect(url_for('auth.login'))
 
-    if request.method == 'POST':
-        name = request.form['name']
-        target_amount = float(request.form['target_amount'])
-        current_amount = float(request.form['current_amount'])
-        target_date_str = request.form['target_date']
-        target_date = datetime.strptime(target_date_str, '%Y-%m-%d') if target_date_str else None
+    name = request.form['name']
+    target_amount = float(request.form['target_amount'])
+    current_amount = float(request.form['current_amount'])
+    target_date_str = request.form['target_date']
+    target_date = datetime.strptime(target_date_str, '%Y-%m-%d') if target_date_str else None
 
-        new_savings_goal = SavingsGoal(
-            name=name,
-            target_amount=target_amount,
-            current_amount=current_amount,
-            target_date=target_date,
-            user_id=session['user_id']
-        )
+    new_savings_goal = SavingsGoal(
+        name=name,
+        target_amount=target_amount,
+        current_amount=current_amount,
+        target_date=target_date,
+        user_id=session['user_id']
+    )
 
-        try:
-            db.session.add(new_savings_goal)
-            db.session.commit()
-            flash('Savings goal added successfully!')
-            return redirect(url_for('savings.savings'))
-        except:
-            flash('Something went wrong. Please try again.')
+    try:
+        db.session.add(new_savings_goal)
+        db.session.commit()
+        flash('Savings goal added successfully!')
+    except:
+        db.session.rollback()
+        flash('Something went wrong. Please try again.')
 
-    return render_template('add_savings_goal.html')
+    return redirect(url_for('savings.savings'))
 
 
-@savings_bp.route('/savings/edit/<int:id>', methods=['GET', 'POST'])
+@savings_bp.route('/savings/edit/<int:id>', methods=['POST'])
 def edit_savings_goal(id):
     if 'user_id' not in session:
         flash('Please login first.')
@@ -76,22 +75,21 @@ def edit_savings_goal(id):
         flash('Unauthorized access.')
         return redirect(url_for('savings.savings'))
 
-    if request.method == 'POST':
-        savings_goal.name = request.form['name']
-        savings_goal.target_amount = float(request.form['target_amount'])
-        savings_goal.current_amount = float(request.form['current_amount'])
+    savings_goal.name = request.form['name']
+    savings_goal.target_amount = float(request.form['target_amount'])
+    savings_goal.current_amount = float(request.form['current_amount'])
 
-        target_date_str = request.form['target_date']
-        savings_goal.target_date = datetime.strptime(target_date_str, '%Y-%m-%d') if target_date_str else None
+    target_date_str = request.form['target_date']
+    savings_goal.target_date = datetime.strptime(target_date_str, '%Y-%m-%d') if target_date_str else None
 
-        try:
-            db.session.commit()
-            flash('Savings goal updated successfully!')
-            return redirect(url_for('savings.savings'))
-        except:
-            flash('Something went wrong. Please try again.')
+    try:
+        db.session.commit()
+        flash('Savings goal updated successfully!')
+    except:
+        db.session.rollback()
+        flash('Something went wrong. Please try again.')
 
-    return render_template('edit_savings_goal.html', goal=savings_goal)
+    return redirect(url_for('savings.savings'))
 
 
 @savings_bp.route('/savings/update/<int:id>', methods=['POST'])

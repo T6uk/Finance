@@ -107,36 +107,35 @@ def incomes():
                            top_source=top_source)
 
 
-@income_bp.route('/incomes/add', methods=['GET', 'POST'])
+@income_bp.route('/incomes/add', methods=['POST'])
 def add_income():
     if 'user_id' not in session:
         flash('Please login first.')
         return redirect(url_for('auth.login'))
 
-    if request.method == 'POST':
-        amount = float(request.form['amount'])
-        source = request.form['source']
-        description = request.form['description']
-        date_str = request.form['date']
-        date = datetime.strptime(date_str, '%Y-%m-%d')
+    amount = float(request.form['amount'])
+    source = request.form['source']
+    description = request.form['description']
+    date_str = request.form['date']
+    date = datetime.strptime(date_str, '%Y-%m-%d')
 
-        new_income = Income(
-            amount=amount,
-            source=source,
-            description=description,
-            date=date,
-            user_id=session['user_id']
-        )
+    new_income = Income(
+        amount=amount,
+        source=source,
+        description=description,
+        date=date,
+        user_id=session['user_id']
+    )
 
-        try:
-            db.session.add(new_income)
-            db.session.commit()
-            flash('Income added successfully!')
-            return redirect(url_for('income.incomes'))
-        except:
-            flash('Something went wrong. Please try again.')
+    try:
+        db.session.add(new_income)
+        db.session.commit()
+        flash('Income added successfully!')
+    except:
+        db.session.rollback()
+        flash('Something went wrong. Please try again.')
 
-    return render_template('add_income.html')
+    return redirect(url_for('income.incomes'))
 
 
 @income_bp.route('/incomes/edit/<int:id>', methods=['GET', 'POST'])

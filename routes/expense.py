@@ -92,36 +92,35 @@ def expenses():
                            top_category=top_category)
 
 
-@expense_bp.route('/expenses/add', methods=['GET', 'POST'])
+@expense_bp.route('/expenses/add', methods=['POST'])
 def add_expense():
     if 'user_id' not in session:
         flash('Please login first.')
         return redirect(url_for('auth.login'))
 
-    if request.method == 'POST':
-        amount = float(request.form['amount'])
-        category = request.form['category']
-        description = request.form['description']
-        date_str = request.form['date']
-        date = datetime.strptime(date_str, '%Y-%m-%d')
+    amount = float(request.form['amount'])
+    category = request.form['category']
+    description = request.form['description']
+    date_str = request.form['date']
+    date = datetime.strptime(date_str, '%Y-%m-%d')
 
-        new_expense = Expense(
-            amount=amount,
-            category=category,
-            description=description,
-            date=date,
-            user_id=session['user_id']
-        )
+    new_expense = Expense(
+        amount=amount,
+        category=category,
+        description=description,
+        date=date,
+        user_id=session['user_id']
+    )
 
-        try:
-            db.session.add(new_expense)
-            db.session.commit()
-            flash('Expense added successfully!')
-            return redirect(url_for('expense.expenses'))
-        except:
-            flash('Something went wrong. Please try again.')
+    try:
+        db.session.add(new_expense)
+        db.session.commit()
+        flash('Expense added successfully!')
+    except:
+        db.session.rollback()
+        flash('Something went wrong. Please try again.')
 
-    return render_template('add_expense.html')
+    return redirect(url_for('expense.expenses'))
 
 
 @expense_bp.route('/expenses/edit/<int:id>', methods=['GET', 'POST'])

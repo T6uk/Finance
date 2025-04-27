@@ -135,48 +135,46 @@ def get_days_in_month(year, month):
         return 31
 
 
-@recurring_bp.route('/recurring/add', methods=['GET', 'POST'])
+@recurring_bp.route('/recurring/add', methods=['POST'])
 def add_recurring():
     if 'user_id' not in session:
         flash('Please login first.')
         return redirect(url_for('auth.login'))
 
-    if request.method == 'POST':
-        type = request.form['type']
-        amount = float(request.form['amount'])
-        category = request.form['category']
-        description = request.form['description']
-        frequency = request.form['frequency']
-        start_date_str = request.form['start_date']
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-        end_date_str = request.form.get('end_date', '')
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d') if end_date_str else None
+    type = request.form['type']
+    amount = float(request.form['amount'])
+    category = request.form['category']
+    description = request.form['description']
+    frequency = request.form['frequency']
+    start_date_str = request.form['start_date']
+    start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+    end_date_str = request.form.get('end_date', '')
+    end_date = datetime.strptime(end_date_str, '%Y-%m-%d') if end_date_str else None
 
-        # Calculate next date based on frequency and start date
-        next_date = calculate_next_date(start_date, frequency)
+    # Calculate next date based on frequency and start date
+    next_date = calculate_next_date(start_date, frequency)
 
-        new_recurring = RecurringTransaction(
-            type=type,
-            amount=amount,
-            category=category,
-            description=description,
-            frequency=frequency,
-            start_date=start_date,
-            end_date=end_date,
-            next_date=next_date,
-            user_id=session['user_id']
-        )
+    new_recurring = RecurringTransaction(
+        type=type,
+        amount=amount,
+        category=category,
+        description=description,
+        frequency=frequency,
+        start_date=start_date,
+        end_date=end_date,
+        next_date=next_date,
+        user_id=session['user_id']
+    )
 
-        try:
-            db.session.add(new_recurring)
-            db.session.commit()
-            flash('Recurring transaction added successfully!')
-            return redirect(url_for('recurring.recurring_transactions'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Something went wrong: {str(e)}')
+    try:
+        db.session.add(new_recurring)
+        db.session.commit()
+        flash('Recurring transaction added successfully!')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Something went wrong: {str(e)}')
 
-    return render_template('add_recurring.html')
+    return redirect(url_for('recurring.recurring_transactions'))
 
 
 @recurring_bp.route('/recurring/edit/<int:id>', methods=['GET', 'POST'])
