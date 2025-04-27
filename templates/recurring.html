@@ -4,72 +4,674 @@
 {% block title %}Recurring Transactions{% endblock %}
 
 {% block content %}
+<!-- Header Section -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Recurring Transactions</h1>
     <div>
+        <h1 class="mb-1">Recurring Transactions</h1>
+        <p class="text-muted mb-0">Automate your regular income and expenses</p>
+    </div>
+    <div class="header-actions">
         <a href="{{ url_for('recurring.process_recurring_transactions') }}" class="btn btn-success me-2">
-            <i class="bi bi-arrow-clockwise"></i> Process Due Transactions
+            <i class="bi bi-arrow-repeat me-2"></i>Process Due Transactions
         </a>
         <a href="{{ url_for('recurring.add_recurring') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Add Recurring Transaction
+            <i class="bi bi-plus-lg me-2"></i>Add Recurring
         </a>
     </div>
 </div>
 
+<!-- Summary Cards -->
 {% if recurring %}
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Category</th>
-                        <th>Amount</th>
-                        <th>Description</th>
-                        <th>Frequency</th>
-                        <th>Next Date</th>
-                        <th>End Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in recurring %}
-                    <tr>
-                        <td>
-                            <span class="badge {{ 'bg-danger' if item.type == 'expense' else 'bg-success' }}">
-                                {{ item.type|capitalize }}
-                            </span>
-                        </td>
-                        <td>{{ item.category }}</td>
-                        <td>${{ "%.2f"|format(item.amount) }}</td>
-                        <td>{{ item.description }}</td>
-                        <td>{{ item.frequency|capitalize }}</td>
-                        <td>{{ item.next_date.strftime('%Y-%m-%d') }}</td>
-                        <td>{{ item.end_date.strftime('%Y-%m-%d') if item.end_date else 'No end date' }}</td>
-                        <td>
-                            <a href="{{ url_for('recurring.edit_recurring', id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <a href="{{ url_for('recurring.delete_recurring', id=item.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this recurring transaction?')">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<div class="row mb-4">
+    <!-- Recurring Expenses -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm recurring-stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon recurring-expense-icon me-3">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Recurring Expenses</h6>
+                        <h3 class="mb-0">
+                            ${% if recurring_stats.expenses.amount is defined %}{{ "%.2f"|format(recurring_stats.expenses.amount) }}{% else %}0.00{% endif %}<span class="text-muted fs-6 fw-normal">/month</span>
+                        </h3>
+                        <div class="stat-subtitle">
+                            {{ recurring_stats.expenses.count if recurring_stats.expenses.count is defined else 0 }} active
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recurring Income -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm recurring-stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon recurring-income-icon me-3">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Recurring Income</h6>
+                        <h3 class="mb-0">
+                            ${% if recurring_stats.income.amount is defined %}{{ "%.2f"|format(recurring_stats.income.amount) }}{% else %}0.00{% endif %}<span class="text-muted fs-6 fw-normal">/month</span>
+                        </h3>
+                        <div class="stat-subtitle">
+                            {{ recurring_stats.income.count if recurring_stats.income.count is defined else 0 }} active
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Net -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm recurring-stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    {% if recurring_stats.income.amount is defined and recurring_stats.expenses.amount is defined %}
+                        {% set monthly_net = recurring_stats.income.amount - recurring_stats.expenses.amount %}
+                        {% set icon_class = 'recurring-net-positive-icon' if monthly_net >= 0 else 'recurring-net-negative-icon' %}
+                        {% set text_class = 'text-success' if monthly_net >= 0 else 'text-danger' %}
+                    {% else %}
+                        {% set monthly_net = 0 %}
+                        {% set icon_class = 'recurring-net-positive-icon' %}
+                        {% set text_class = '' %}
+                    {% endif %}
+
+                    <div class="stat-icon {{ icon_class }} me-3">
+                        <i class="bi bi-calculator"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Monthly Net</h6>
+                        <h3 class="mb-0 {{ text_class }}">
+                            ${% if monthly_net is defined %}{{ "%.2f"|format(monthly_net) }}{% else %}0.00{% endif %}
+                        </h3>
+                        <div class="stat-subtitle">
+                            Projected
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-{% else %}
-<div class="alert alert-info">
-    <p>No recurring transactions set up yet. Add your first one to automate your financial tracking!</p>
-</div>
-<div class="text-center mt-4">
-    <a href="{{ url_for('recurring.add_recurring') }}" class="btn btn-primary btn-lg">
-        <i class="bi bi-plus-lg"></i> Add Your First Recurring Transaction
-    </a>
-</div>
 {% endif %}
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Recurring Transactions List -->
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0">
+                <ul class="nav nav-tabs card-header-tabs" id="recurringTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-transactions" type="button" role="tab" aria-controls="all-transactions" aria-selected="true">
+                            <i class="bi bi-list-ul me-2"></i>All Transactions
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-transactions" type="button" role="tab" aria-controls="upcoming-transactions" aria-selected="false">
+                            <i class="bi bi-calendar-event me-2"></i>Upcoming
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card-body">
+                <div class="tab-content" id="recurringTabContent">
+                    <!-- All Transactions Tab -->
+                    <div class="tab-pane fade show active" id="all-transactions" role="tabpanel" aria-labelledby="all-tab">
+                        {% if recurring %}
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Details</th>
+                                        <th>Frequency</th>
+                                        <th>Amount</th>
+                                        <th>Next Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in recurring %}
+                                    <tr class="recurring-row">
+                                        <td>
+                                            <span class="transaction-type-badge {{ 'badge-expense' if item.type == 'expense' else 'badge-income' }}">
+                                                {{ item.type|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="transaction-details">
+                                                <div class="category-badge {{ 'category-expense' if item.type == 'expense' else 'category-income' }}">{{ item.category }}</div>
+                                                <div class="transaction-description">
+                                                    {% if item.description %}{{ item.description }}{% else %}<span class="text-muted fst-italic">No description</span>{% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="frequency-badge">
+                                                <i class="bi bi-arrow-repeat me-1"></i>
+                                                {{ item.frequency|capitalize }}
+                                            </div>
+                                        </td>
+                                        <td class="fw-bold {{ 'text-danger' if item.type == 'expense' else 'text-success' }}">${{ "%.2f"|format(item.amount) }}</td>
+                                        <td>
+                                            {% set days_to_next = (item.next_date - now()).days %}
+                                            {{ item.next_date.strftime('%b %d, %Y') }}
+                                            <div class="days-indicator">
+                                                {% if days_to_next == 0 %}
+                                                <span class="badge rounded-pill bg-warning text-dark">Today</span>
+                                                {% elif days_to_next < 0 %}
+                                                <span class="badge rounded-pill bg-danger">Overdue</span>
+                                                {% elif days_to_next <= 3 %}
+                                                <span class="badge rounded-pill bg-warning text-dark">In {{ days_to_next }} days</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{{ url_for('recurring.edit_recurring', id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{{ url_for('recurring.delete_recurring', id=item.id) }}" class="btn btn-sm btn-outline-danger"
+                                                   onclick="return confirm('Are you sure you want to delete this recurring transaction?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <div class="empty-state">
+                                <div class="empty-state-icon mb-3">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </div>
+                                <h5>No recurring transactions</h5>
+                                <p class="text-muted mb-4">Set up recurring transactions to automate your regular income and expenses.</p>
+
+                                <a href="{{ url_for('recurring.add_recurring') }}" class="btn btn-primary">
+                                    <i class="bi bi-plus-lg me-2"></i>Add Your First Recurring Transaction
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Upcoming Transactions Tab -->
+                    <div class="tab-pane fade" id="upcoming-transactions" role="tabpanel" aria-labelledby="upcoming-tab">
+                        {% if recurring and upcoming_transactions %}
+                        <div class="upcoming-timeline">
+                            {% set current_date = none %}
+                            {% for transaction in upcoming_transactions %}
+                                {% set tx_date = transaction.date.strftime('%Y-%m-%d') %}
+                                {% if tx_date != current_date %}
+                                    {% set current_date = tx_date %}
+                                    {% set days_diff = (transaction.date - now()).days %}
+                                    <div class="timeline-date">
+                                        <div class="date-badge">
+                                            {{ transaction.date.strftime('%b %d, %Y') }}
+                                            {% if days_diff == 0 %}
+                                            <span class="today-indicator">Today</span>
+                                            {% elif days_diff == 1 %}
+                                            <span class="day-indicator">Tomorrow</span>
+                                            {% elif days_diff > 1 and days_diff < 7 %}
+                                            <span class="day-indicator">{{ transaction.date.strftime('%A') }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div class="timeline-item">
+                                    <div class="timeline-icon {{ 'icon-expense' if transaction.type == 'expense' else 'icon-income' }}">
+                                        <i class="bi {{ 'bi-arrow-down' if transaction.type == 'expense' else 'bi-arrow-up' }}"></i>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-header">
+                                            <span class="category-badge {{ 'category-expense' if transaction.type == 'expense' else 'category-income' }}">{{ transaction.category }}</span>
+                                            <span class="timeline-amount {{ 'text-danger' if transaction.type == 'expense' else 'text-success' }}">${{ "%.2f"|format(transaction.amount) }}</span>
+                                        </div>
+                                        <div class="timeline-description">
+                                            {% if transaction.description %}{{ transaction.description }}{% else %}<span class="text-muted fst-italic">No description</span>{% endif %}
+                                        </div>
+                                        <div class="timeline-recurrence">
+                                            Recurs {{ transaction.frequency }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <div class="empty-state">
+                                <div class="empty-state-icon mb-3">
+                                    <i class="bi bi-calendar-event"></i>
+                                </div>
+                                <h5>No upcoming transactions</h5>
+                                <p class="text-muted">There are no recurring transactions scheduled for the next 30 days.</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recurring Insights and Tips -->
+    <div class="col-lg-4 mb-4">
+        {% if recurring %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-pie-chart-fill me-2"></i>Monthly Recurring
+                </h5>
+            </div>
+            <div class="card-body">
+                <div style="height: 250px; position: relative;">
+                    <canvas id="recurringChart"></canvas>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-lightbulb me-2"></i>Automation Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="recurring-tips">
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h6>Process Regularly</h6>
+                            <p class="small text-muted">Get in the habit of processing due transactions weekly to keep your finances updated.</p>
+                        </div>
+                    </div>
+
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h6>Review Subscriptions</h6>
+                            <p class="small text-muted">Regularly review your recurring expenses to identify subscriptions you no longer use.</p>
+                        </div>
+                    </div>
+
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="bi bi-bank"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h6>Automate Savings</h6>
+                            <p class="small text-muted">Create recurring transfers to your savings account to build wealth consistently.</p>
+                        </div>
+                    </div>
+
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="bi bi-calendar-date"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h6>Align With Income</h6>
+                            <p class="small text-muted">Schedule bills and expenses shortly after your regular income dates for better cash flow.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Recurring Stats Cards */
+    .recurring-stat-card {
+        border-radius: 12px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .recurring-stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .recurring-expense-icon {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .recurring-income-icon {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .recurring-net-positive-icon {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .recurring-net-negative-icon {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .stat-subtitle {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    /* Transaction Type Badges */
+    .transaction-type-badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-expense {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .badge-income {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    /* Category Badges */
+    .category-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .category-expense {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .category-income {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    /* Transaction Details */
+    .transaction-description {
+        font-size: 0.85rem;
+        color: #495057;
+    }
+
+    /* Frequency Badge */
+    .frequency-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        background-color: #f8f9fa;
+        color: #6c757d;
+    }
+
+    /* Recurring Row */
+    .recurring-row {
+        transition: background-color 0.2s;
+    }
+
+    .recurring-row:hover {
+        background-color: rgba(0,0,0,0.02);
+    }
+
+    /* Days Indicator */
+    .days-indicator {
+        margin-top: 0.25rem;
+        font-size: 0.75rem;
+    }
+
+    /* Timeline View */
+    .upcoming-timeline {
+        padding: 1rem 0;
+    }
+
+    .timeline-date {
+        margin: 1.5rem 0 0.5rem;
+        position: relative;
+    }
+
+    .date-badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        background-color: #f8f9fa;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .today-indicator {
+        display: inline-block;
+        margin-left: 0.5rem;
+        padding: 0.15rem 0.5rem;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .day-indicator {
+        display: inline-block;
+        margin-left: 0.5rem;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .timeline-item {
+        display: flex;
+        margin-bottom: 1rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    }
+
+    .timeline-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .timeline-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .icon-expense {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .icon-income {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .timeline-content {
+        flex-grow: 1;
+    }
+
+    .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.25rem;
+    }
+
+    .timeline-amount {
+        font-weight: 600;
+    }
+
+    .timeline-description {
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .timeline-recurrence {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+
+    /* Tips Section */
+    .recurring-tips {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .tip-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        transition: transform 0.3s ease;
+        padding: 0.5rem;
+        border-radius: 8px;
+    }
+
+    .tip-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+    }
+
+    .tip-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .tip-content {
+        flex-grow: 1;
+    }
+
+    .tip-content h6 {
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+    }
+
+    .tip-content p {
+        margin-bottom: 0;
+    }
+
+    /* Empty States */
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+
+    /* Tab styling */
+    .nav-tabs .nav-link.active {
+        font-weight: 600;
+        border-bottom: 3px solid #0d6efd;
+    }
+</style>
+
+<script>
+    {% if recurring %}
+    // Initialize the Recurring Transactions Chart
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('recurringChart').getContext('2d');
+
+        // Prepare data for doughnut chart
+        const types = ['Recurring Income', 'Recurring Expenses'];
+        const amounts = [
+            {% if recurring_stats.income.amount is defined %}{{ recurring_stats.income.amount }}{% else %}0{% endif %},
+            {% if recurring_stats.expenses.amount is defined %}{{ recurring_stats.expenses.amount }}{% else %}0{% endif %}
+        ];
+
+        // Colors
+        const backgroundColors = [
+            'rgba(40, 167, 69, 0.7)',  // Green for income
+            'rgba(220, 53, 69, 0.7)'   // Red for expenses
+        ];
+
+        // Create the chart
+        const recurringChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: types,
+                datasets: [{
+                    data: amounts,
+                    backgroundColor: backgroundColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 15,
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = parseFloat(context.formattedValue);
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `$${value.toFixed(2)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+    {% endif %}
+</script>
 {% endblock %}

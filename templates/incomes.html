@@ -4,57 +4,657 @@
 {% block title %}Income{% endblock %}
 
 {% block content %}
+<!-- Header Section -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Income</h1>
-    <a href="{{ url_for('income.add_income') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> Add Income
+    <div>
+        <h1 class="mb-1">Income</h1>
+        <p class="text-muted mb-0">Track and manage your earnings</p>
+    </div>
+    <a href="{{ url_for('income.add_income') }}" class="btn btn-success">
+        <i class="bi bi-plus-lg me-2"></i>Add Income
     </a>
 </div>
 
-{% if incomes %}
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Source</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for income in incomes %}
-                    <tr>
-                        <td>{{ income.date.strftime('%Y-%m-%d') }}</td>
-                        <td>{{ income.source }}</td>
-                        <td>{{ income.description }}</td>
-                        <td>${{ "%.2f"|format(income.amount) }}</td>
-                        <td>
-                            <a href="{{ url_for('income.edit_income', id=income.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <a href="{{ url_for('income.delete_income', id=income.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this income entry?')">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<!-- Stats Cards Row -->
+<div class="row mb-4">
+    <!-- Total Income This Month -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm income-stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon monthly-income-icon me-3">
+                        <i class="bi bi-calendar-month"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">This Month</h6>
+                        <h3 class="mb-0">
+                            ${% if monthly_total is defined %}{{ "%.2f"|format(monthly_total) }}{% else %}0.00{% endif %}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Average Monthly Income -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm income-stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon monthly-average-icon me-3">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Monthly Average</h6>
+                        <h3 class="mb-0">
+                            ${% if monthly_avg is defined %}{{ "%.2f"|format(monthly_avg) }}{% else %}0.00{% endif %}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Source -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm income-stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon top-source-icon me-3">
+                        <i class="bi bi-briefcase"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Top Source</h6>
+                        <h3 class="mb-0">
+                            {% if top_source is defined %}{{ top_source }}{% else %}N/A{% endif %}
+                        </h3>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-{% else %}
-<div class="alert alert-info">
-    <p>No income recorded yet. Start by adding your first income entry!</p>
+
+<!-- Search and Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-transparent border-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-funnel me-2"></i>Filter Income
+            </h5>
+            <button class="btn btn-sm btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                <i class="bi bi-sliders me-1"></i>
+                {% if filter_search or filter_source or filter_min_amount or filter_max_amount or filter_start_date or filter_end_date %}
+                    <span class="badge bg-success">Active</span>
+                {% else %}
+                    Toggle Filters
+                {% endif %}
+            </button>
+        </div>
+    </div>
+
+    <div class="collapse {% if filter_search or filter_source or filter_min_amount or filter_max_amount or filter_start_date or filter_end_date %}show{% endif %}" id="filterCollapse">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('income.incomes') }}">
+                <div class="row g-3">
+                    <!-- Search Term -->
+                    <div class="col-md-12">
+                        <div class="input-group">
+                            <span class="input-group-text border-end-0 bg-light"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control border-start-0 bg-light ps-0" name="search" placeholder="Search descriptions..." value="{{ filter_search or '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Source Filter -->
+                    <div class="col-md-6">
+                        <label for="source" class="form-label">Source</label>
+                        <select class="form-select" id="source" name="source">
+                            <option value="all">All Sources</option>
+                            {% for source in sources %}
+                            <option value="{{ source }}" {% if filter_source == source %}selected{% endif %}>{{ source }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Date Range Controls -->
+                    <div class="col-md-6">
+                        <label class="form-label">Date Range Preset</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary flex-grow-1" id="thisMonth">This Month</button>
+                            <button type="button" class="btn btn-outline-secondary flex-grow-1" id="lastMonth">Last Month</button>
+                            <button type="button" class="btn btn-outline-secondary flex-grow-1" id="thisYear">This Year</button>
+                        </div>
+                    </div>
+
+                    <!-- Amount Range -->
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-6">
+                                <label for="min_amount" class="form-label">Min Amount ($)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                    <input type="number" step="0.01" class="form-control" id="min_amount" name="min_amount" value="{{ filter_min_amount or '' }}">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label for="max_amount" class="form-label">Max Amount ($)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                    <input type="number" step="0.01" class="form-control" id="max_amount" name="max_amount" value="{{ filter_max_amount or '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-6">
+                                <label for="start_date" class="form-label">From Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ filter_start_date or '' }}">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label for="end_date" class="form-label">To Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ filter_end_date or '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="col-12 d-flex justify-content-between">
+                        <a href="{{ url_for('income.incomes') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i>Clear Filters
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-funnel me-1"></i>Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-<div class="text-center mt-4">
-    <a href="{{ url_for('income.add_income') }}" class="btn btn-primary btn-lg">
-        <i class="bi bi-plus-lg"></i> Add Your First Income
-    </a>
+
+<!-- Income List and Visualization Tabs -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-0">
+        <ul class="nav nav-tabs card-header-tabs" id="incomeTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button" role="tab" aria-controls="list" aria-selected="true">
+                    <i class="bi bi-list-ul me-2"></i>List View
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="visualization-tab" data-bs-toggle="tab" data-bs-target="#visualization" type="button" role="tab" aria-controls="visualization" aria-selected="false">
+                    <i class="bi bi-pie-chart me-2"></i>Visualization
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="card-body">
+        <div class="tab-content" id="incomeTabContent">
+            <!-- List View Tab -->
+            <div class="tab-pane fade show active" id="list" role="tabpanel" aria-labelledby="list-tab">
+                {% if incomes %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Source</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for income in incomes %}
+                            <tr class="income-row">
+                                <td>{{ income.date.strftime('%b %d, %Y') }}</td>
+                                <td>
+                                    <span class="source-badge rounded-pill">{{ income.source }}</span>
+                                </td>
+                                <td>
+                                    {% if income.description %}{{ income.description }}{% else %}<span class="text-muted fst-italic">No description</span>{% endif %}
+                                </td>
+                                <td class="fw-bold text-success">${{ "%.2f"|format(income.amount) }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('income.edit_income', id=income.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{{ url_for('income.delete_income', id=income.id) }}" class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Are you sure you want to delete this income entry?')">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <div class="empty-state-icon mb-3">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <h5>No income entries found</h5>
+                        <p class="text-muted mb-4">No income entries match your current filter criteria or you haven't added any yet.</p>
+
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="{{ url_for('income.incomes') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i>Clear Filters
+                            </a>
+                            <a href="{{ url_for('income.add_income') }}" class="btn btn-success">
+                                <i class="bi bi-plus-lg me-1"></i>Add Income
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Visualization Tab -->
+            <div class="tab-pane fade" id="visualization" role="tabpanel" aria-labelledby="visualization-tab">
+                {% if incomes %}
+                <div class="row">
+                    <!-- Source Distribution -->
+                    <div class="col-md-6 mb-4">
+                        <h5 class="chart-title">Income by Source</h5>
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="sourceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Time Series -->
+                    <div class="col-md-6 mb-4">
+                        <h5 class="chart-title">Income over Time</h5>
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="timeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Comparison -->
+                    <div class="col-md-12 mb-4">
+                        <h5 class="chart-title">Monthly Income Comparison</h5>
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="monthlyComparisonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <div class="empty-state-icon mb-3">
+                            <i class="bi bi-bar-chart"></i>
+                        </div>
+                        <h5>No data to visualize</h5>
+                        <p class="text-muted">Add income entries to see visualizations and gain insights.</p>
+
+                        <a href="{{ url_for('income.add_income') }}" class="btn btn-success">
+                            <i class="bi bi-plus-lg me-1"></i>Add Your First Income Entry
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
-{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Stats Cards */
+    .income-stat-card {
+        border-radius: 12px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .income-stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .monthly-income-icon {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .monthly-average-icon {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+
+    .top-source-icon {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+
+    /* Source Badges */
+    .source-badge {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+        padding: 4px 10px;
+        font-size: 0.8rem;
+    }
+
+    /* Income Rows */
+    .income-row {
+        transition: background-color 0.2s;
+    }
+
+    .income-row:hover {
+        background-color: rgba(0,0,0,0.02);
+    }
+
+    /* Empty States */
+    .empty-state {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .empty-state-icon {
+        font-size: 48px;
+        color: #dee2e6;
+    }
+
+    /* Chart Titles */
+    .chart-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    /* Tables */
+    .table td, .table th {
+        padding: 0.75rem 1rem;
+    }
+
+    /* Card Styling */
+    .card {
+        border-radius: 0.5rem;
+    }
+
+    .card-header {
+        padding: 1rem 1.25rem;
+    }
+</style>
+
+<script>
+    // Date range presets
+    document.getElementById('thisMonth').addEventListener('click', function() {
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        document.getElementById('start_date').value = formatDate(startOfMonth);
+        document.getElementById('end_date').value = formatDate(today);
+    });
+
+    document.getElementById('lastMonth').addEventListener('click', function() {
+        const today = new Date();
+        const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+
+        document.getElementById('start_date').value = formatDate(startOfLastMonth);
+        document.getElementById('end_date').value = formatDate(endOfLastMonth);
+    });
+
+    document.getElementById('thisYear').addEventListener('click', function() {
+        const today = new Date();
+        const startOfYear = new Date(today.getFullYear(), 0, 1);
+
+        document.getElementById('start_date').value = formatDate(startOfYear);
+        document.getElementById('end_date').value = formatDate(today);
+    });
+
+    // Format date as YYYY-MM-DD for input fields
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    {% if incomes %}
+    // Prepare data for charts
+    document.getElementById('visualization-tab').addEventListener('shown.bs.tab', function (e) {
+        // Initialize charts only when tab is shown to avoid rendering issues
+        initializeCharts();
+    });
+
+    function initializeCharts() {
+        // Source Distribution Chart
+        const sourceCtx = document.getElementById('sourceChart').getContext('2d');
+        const sourceData = {};
+
+        // Collect data from incomes
+        {% for income in incomes %}
+        if ('{{ income.source }}' in sourceData) {
+            sourceData['{{ income.source }}'] += {{ income.amount }};
+        } else {
+            sourceData['{{ income.source }}'] = {{ income.amount }};
+        }
+        {% endfor %}
+
+        // Convert to arrays for chart
+        const sources = Object.keys(sourceData);
+        const amounts = Object.values(sourceData);
+
+        // Chart colors
+        const backgroundColors = [
+            'rgba(40, 167, 69, 0.7)',    // Green
+            'rgba(23, 162, 184, 0.7)',   // Teal
+            'rgba(13, 110, 253, 0.7)',   // Blue
+            'rgba(111, 66, 193, 0.7)',   // Purple
+            'rgba(253, 126, 20, 0.7)',   // Orange
+            'rgba(32, 201, 151, 0.7)',   // Mint
+            'rgba(102, 16, 242, 0.7)',   // Indigo
+            'rgba(214, 51, 132, 0.7)',   // Pink
+            'rgba(0, 123, 255, 0.7)',    // Primary blue
+            'rgba(40, 167, 69, 0.7)'     // Success green
+        ];
+
+        // Create the chart
+        const sourceChart = new Chart(sourceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: sources,
+                datasets: [{
+                    data: amounts,
+                    backgroundColor: backgroundColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 15,
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = parseFloat(context.formattedValue);
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `$${value.toFixed(2)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Time Series Chart
+        const timeCtx = document.getElementById('timeChart').getContext('2d');
+        const timeData = {};
+
+        // Group incomes by date
+        {% for income in incomes %}
+        const date = '{{ income.date.strftime("%Y-%m-%d") }}';
+        if (date in timeData) {
+            timeData[date] += {{ income.amount }};
+        } else {
+            timeData[date] = {{ income.amount }};
+        }
+        {% endfor %}
+
+        // Sort dates and prepare data for chart
+        const sortedDates = Object.keys(timeData).sort();
+        const timeAmounts = sortedDates.map(date => timeData[date]);
+
+        // Create time series chart
+        const timeChart = new Chart(timeCtx, {
+            type: 'line',
+            data: {
+                labels: sortedDates.map(date => {
+                    const d = new Date(date);
+                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }),
+                datasets: [{
+                    label: 'Income Received',
+                    data: timeAmounts,
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: 'rgba(40, 167, 69, 1)',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toFixed(0);
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + parseFloat(context.formattedValue).toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Monthly Comparison Chart
+        const monthlyCtx = document.getElementById('monthlyComparisonChart').getContext('2d');
+        const monthlyData = {};
+
+        // Group incomes by month
+        {% for income in incomes %}
+        const monthKey = '{{ income.date.strftime("%Y-%m") }}';
+        if (monthKey in monthlyData) {
+            monthlyData[monthKey] += {{ income.amount }};
+        } else {
+            monthlyData[monthKey] = {{ income.amount }};
+        }
+        {% endfor %}
+
+        // Sort months and prepare data for chart
+        const sortedMonths = Object.keys(monthlyData).sort();
+        const monthlyAmounts = sortedMonths.map(month => monthlyData[month]);
+
+        // Format month labels
+        const monthLabels = sortedMonths.map(month => {
+            const [year, monthNum] = month.split('-');
+            const date = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+            return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        });
+
+        // Create monthly comparison chart
+        const monthlyChart = new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: 'Monthly Income',
+                    data: monthlyAmounts,
+                    backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toFixed(0);
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + parseFloat(context.formattedValue).toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+</script>
 {% endblock %}

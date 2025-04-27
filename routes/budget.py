@@ -1,4 +1,3 @@
-
 # routes/budget.py
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
@@ -7,11 +6,12 @@ from models import Budget, Expense
 
 budget_bp = Blueprint('budget', __name__)
 
+
 @budget_bp.route('/budgets')
 def budgets():
     if 'user_id' not in session:
         flash('Please login first.')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     user_id = session['user_id']
 
@@ -51,6 +51,10 @@ def budgets():
         else:
             category_spending[expense.category] = expense.amount
 
+    # Calculate summary statistics
+    total_budgeted = sum(budget.amount for budget in budgets)
+    total_spent = sum(category_spending.values())
+
     # Predefined expense categories (get unique categories from expenses)
     all_categories = set([e.category for e in Expense.query.filter_by(user_id=user_id).distinct(Expense.category)])
     if not all_categories:
@@ -64,44 +68,57 @@ def budgets():
                            selected_month=month,
                            selected_year=year,
                            current_month=current_month,
-                           current_year=current_year)
+                           current_year=current_year,
+                           total_budgeted=total_budgeted,
+                           total_spent=total_spent)
 
 
 @budget_bp.route('/budgets/set', methods=['POST'])
 def set_budget():
     if 'user_id' not in session:
         flash('Please login first.')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     user_id = session['user_id']
     category = request.form['category']
     amount = float(request.form['amount'])
     month = int(request.form['month'])
     year = int(request.form['year'])
+    budget_id = request.form.get('budget_id', '')
 
-    # Check if a budget for this category/month/year already exists
-    existing_budget = Budget.query.filter_by(
-        user_id=user_id,
-        category=category,
-        month=month,
-        year=year
-    ).first()
-
-    if existing_budget:
-        # Update existing budget
-        existing_budget.amount = amount
-        flash(f'Budget for {category} updated successfully!')
+    if budget_id:
+        # Update existing budget if ID is provided
+        existing_budget = Budget.query.get(budget_id)
+        if existing_budget and existing_budget.user_id == user_id:
+            existing_budget.amount = amount
+            flash(f'Budget for {category} updated successfully!')
+        else:
+            flash('Budget not found or unauthorized.')
+            return redirect(url_for('budget.budgets', month=month, year=year))
     else:
-        # Create new budget
-        new_budget = Budget(
+        # Check if a budget for this category/month/year already exists
+        existing_budget = Budget.query.filter_by(
+            user_id=user_id,
             category=category,
-            amount=amount,
             month=month,
-            year=year,
-            user_id=user_id
-        )
-        db.session.add(new_budget)
-        flash(f'Budget for {category} set successfully!')
+            year=year
+        ).first()
+
+        if existing_budget:
+            # Update existing budget
+            existing_budget.amount = amount
+            flash(f'Budget for {category} updated successfully!')
+        else:
+            # Create new budget
+            new_budget = Budget(
+                category=category,
+                amount=amount,
+                month=month,
+                year=year,
+                user_id=user_id
+            )
+            db.session.add(new_budget)
+            flash(f'Budget for {category} set successfully!')
 
     try:
         db.session.commit()
@@ -109,21 +126,21 @@ def set_budget():
         db.session.rollback()
         flash('Something went wrong. Please try again.')
 
-    return redirect(url_for('budgets', month=month, year=year))
+    return redirect(url_for('budget.budgets', month=month, year=year))
 
 
 @budget_bp.route('/budgets/delete/<int:id>')
 def delete_budget(id):
     if 'user_id' not in session:
         flash('Please login first.')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     budget = Budget.query.get_or_404(id)
 
     # Ensure the budget belongs to current user
     if budget.user_id != session['user_id']:
         flash('Unauthorized access.')
-        return redirect(url_for('budgets'))
+        return redirect(url_for('budget.budgets'))
 
     # Save month/year for redirect
     month = budget.month
@@ -136,4 +153,4 @@ def delete_budget(id):
     except:
         flash('Something went wrong. Please try again.')
 
-    return redirect(url_for('budgets', month=month, year=year))
+    return redirect(url_for('budget.budgets', month=month, year=year))

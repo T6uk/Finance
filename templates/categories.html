@@ -4,81 +4,592 @@
 {% block title %}Manage Categories{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Manage Categories</h1>
+<!-- Header Section -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-1">Categories</h1>
+        <p class="text-muted mb-0">Organize your finances with custom categories</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+        <i class="bi bi-plus-lg me-2"></i>Add Category
+    </button>
+</div>
 
-<div class="row">
-    <!-- Expense Categories -->
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Expense Categories</h5>
-            </div>
+<!-- Categories View Tabs -->
+<ul class="nav nav-tabs mb-4" id="categoryTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="expense-tab" data-bs-toggle="tab" data-bs-target="#expense" type="button" role="tab" aria-controls="expense" aria-selected="true">
+            <i class="bi bi-cash-coin me-2"></i>Expense Categories
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="income-tab" data-bs-toggle="tab" data-bs-target="#income" type="button" role="tab" aria-controls="income" aria-selected="false">
+            <i class="bi bi-wallet me-2"></i>Income Categories
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="categoryTabContent">
+    <!-- Expense Categories Tab -->
+    <div class="tab-pane fade show active" id="expense" role="tabpanel" aria-labelledby="expense-tab">
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <form method="POST" action="{{ url_for('category.add_category') }}" class="mb-4">
-                    <input type="hidden" name="type" value="expense">
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="name" placeholder="New expense category" required>
-                        <button type="submit" class="btn btn-danger">Add</button>
-                    </div>
-                </form>
-
                 {% if expense_categories %}
-                <ul class="list-group">
-                    {% for category in expense_categories %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ category.name }}
-                        <a href="{{ url_for('category.delete_category', id=category.id) }}"
-                           class="btn btn-sm btn-outline-danger"
-                           onclick="return confirm('Are you sure you want to delete this category?')">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
+                <div class="row">
+                    <!-- Default System Categories -->
+                    <div class="col-12 mb-4">
+                        <h6 class="category-section-title">
+                            <i class="bi bi-gear-fill me-2"></i>System Categories
+                        </h6>
+                        <div class="category-chips">
+                            <div class="category-chip system">
+                                <i class="bi bi-egg-fried"></i>
+                                <span>Food</span>
+                            </div>
+                            <div class="category-chip system">
+                                <i class="bi bi-truck"></i>
+                                <span>Transportation</span>
+                            </div>
+                            <div class="category-chip system">
+                                <i class="bi bi-house"></i>
+                                <span>Housing</span>
+                            </div>
+                            <div class="category-chip system">
+                                <i class="bi bi-lightbulb"></i>
+                                <span>Utilities</span>
+                            </div>
+                            <div class="category-chip system">
+                                <i class="bi bi-tv"></i>
+                                <span>Entertainment</span>
+                            </div>
+                            <div class="category-chip system">
+                                <i class="bi bi-bag"></i>
+                                <span>Shopping</span>
+                            </div>
+                            <div class="category-chip system">
+                                <i class="bi bi-heart-pulse"></i>
+                                <span>Healthcare</span>
+                            </div>
+                            <div class="category-chip system">
+                                <i class="bi bi-book"></i>
+                                <span>Education</span>
+                            </div>
+                            <div class="category-chip system">
+                                <i class="bi bi-three-dots"></i>
+                                <span>Other</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Categories -->
+                    <div class="col-12">
+                        <h6 class="category-section-title">
+                            <i class="bi bi-stars me-2"></i>Your Custom Categories
+                        </h6>
+                        <div class="category-chips">
+                            {% for category in expense_categories %}
+                            <div class="category-chip custom">
+                                <i class="bi {{ get_category_icon(category.name) }}"></i>
+                                <span>{{ category.name }}</span>
+                                <div class="category-actions">
+                                    <button type="button" class="btn-edit-category"
+                                            data-id="{{ category.id }}"
+                                            data-name="{{ category.name }}"
+                                            data-type="{{ category.type }}">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <a href="{{ url_for('category.delete_category', id=category.id) }}"
+                                       onclick="return confirm('Are you sure you want to delete the category \'{{ category.name }}\'? This cannot be undone.')"
+                                       class="btn-delete-category">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            <!-- Add Category Button -->
+                            <button type="button" class="category-chip-add" data-type="expense" onclick="prepareAddCategory('expense')">
+                                <i class="bi bi-plus-circle"></i>
+                                <span>Add New</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 {% else %}
-                <div class="alert alert-info">
-                    No custom expense categories. Add your first one!
+                <!-- Empty State for Expense Categories -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-tags"></i>
+                    </div>
+                    <h5>No custom expense categories yet</h5>
+                    <p class="text-muted mb-4">Create custom categories to better organize your expenses.</p>
+
+                    <button type="button" class="btn btn-danger" data-type="expense" onclick="prepareAddCategory('expense')">
+                        <i class="bi bi-plus-lg me-2"></i>Add Expense Category
+                    </button>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Income Categories -->
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Income Categories</h5>
-            </div>
+    <!-- Income Categories Tab -->
+    <div class="tab-pane fade" id="income" role="tabpanel" aria-labelledby="income-tab">
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <form method="POST" action="{{ url_for('category.add_category') }}" class="mb-4">
-                    <input type="hidden" name="type" value="income">
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="name" placeholder="New income category" required>
-                        <button type="submit" class="btn btn-primary">Add</button>
-                    </div>
-                </form>
-
                 {% if income_categories %}
-                <ul class="list-group">
-                    {% for category in income_categories %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ category.name }}
-                        <a href="{{ url_for('category.delete_category', id=category.id) }}"
-                           class="btn btn-sm btn-outline-danger"
-                           onclick="return confirm('Are you sure you want to delete this category?')">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
+                <div class="row">
+                    <!-- Default System Categories -->
+                    <div class="col-12 mb-4">
+                        <h6 class="category-section-title">
+                            <i class="bi bi-gear-fill me-2"></i>System Categories
+                        </h6>
+                        <div class="category-chips">
+                            <div class="category-chip system income">
+                                <i class="bi bi-briefcase"></i>
+                                <span>Salary</span>
+                            </div>
+                            <div class="category-chip system income">
+                                <i class="bi bi-laptop"></i>
+                                <span>Freelance</span>
+                            </div>
+                            <div class="category-chip system income">
+                                <i class="bi bi-shop"></i>
+                                <span>Business</span>
+                            </div>
+                            <div class="category-chip system income">
+                                <i class="bi bi-graph-up-arrow"></i>
+                                <span>Investment</span>
+                            </div>
+                            <div class="category-chip system income">
+                                <i class="bi bi-gift"></i>
+                                <span>Gift</span>
+                            </div>
+                            <div class="category-chip system income">
+                                <i class="bi bi-three-dots"></i>
+                                <span>Other</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Categories -->
+                    <div class="col-12">
+                        <h6 class="category-section-title">
+                            <i class="bi bi-stars me-2"></i>Your Custom Categories
+                        </h6>
+                        <div class="category-chips">
+                            {% for category in income_categories %}
+                            <div class="category-chip custom income">
+                                <i class="bi {{ get_category_icon(category.name) }}"></i>
+                                <span>{{ category.name }}</span>
+                                <div class="category-actions">
+                                    <button type="button" class="btn-edit-category"
+                                            data-id="{{ category.id }}"
+                                            data-name="{{ category.name }}"
+                                            data-type="{{ category.type }}">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <a href="{{ url_for('category.delete_category', id=category.id) }}"
+                                       onclick="return confirm('Are you sure you want to delete the category \'{{ category.name }}\'? This cannot be undone.')"
+                                       class="btn-delete-category">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            <!-- Add Category Button -->
+                            <button type="button" class="category-chip-add income" data-type="income" onclick="prepareAddCategory('income')">
+                                <i class="bi bi-plus-circle"></i>
+                                <span>Add New</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 {% else %}
-                <div class="alert alert-info">
-                    No custom income categories. Add your first one!
+                <!-- Empty State for Income Categories -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-tags"></i>
+                    </div>
+                    <h5>No custom income categories yet</h5>
+                    <p class="text-muted mb-4">Create custom categories to better organize your income sources.</p>
+
+                    <button type="button" class="btn btn-success" data-type="income" onclick="prepareAddCategory('income')">
+                        <i class="bi bi-plus-lg me-2"></i>Add Income Category
+                    </button>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<!-- Category Tips -->
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-transparent border-0">
+        <h5 class="mb-0 fw-bold">
+            <i class="bi bi-lightbulb me-2"></i>Category Tips
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="tip-card">
+                    <i class="bi bi-tags text-primary tip-icon"></i>
+                    <h6>Specific Categories</h6>
+                    <p class="small text-muted">Create specific categories for better tracking. For example, split "Food" into "Groceries" and "Dining Out".</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="tip-card">
+                    <i class="bi bi-pie-chart text-success tip-icon"></i>
+                    <h6>Budget by Category</h6>
+                    <p class="small text-muted">Set budget limits for each of your expense categories to better control your spending habits.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="tip-card">
+                    <i class="bi bi-bar-chart text-info tip-icon"></i>
+                    <h6>Track Category Trends</h6>
+                    <p class="small text-muted">Review your spending by category over time to identify areas where you can save more money.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">Add Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('category.add_category') }}" id="categoryForm">
+                <input type="hidden" name="id" id="category_id" value="">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="category_type" class="form-label">Category Type</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="type" id="type-expense" value="expense" checked>
+                            <label class="btn btn-outline-danger" for="type-expense">Expense</label>
+
+                            <input type="radio" class="btn-check" name="type" id="type-income" value="income">
+                            <label class="btn btn-outline-success" for="type-income">Income</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="category_name" name="name" placeholder="Enter category name" required>
+                        <div class="form-text">Choose a clear, specific name for your category</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Choose an Icon (Optional)</label>
+                        <div class="icon-selector">
+                            <div class="icon-options">
+                                <button type="button" class="icon-option" data-icon="bi-tag">
+                                    <i class="bi bi-tag"></i>
+                                </button>
+                                <button type="button" class="icon-option" data-icon="bi-credit-card">
+                                    <i class="bi bi-credit-card"></i>
+                                </button>
+                                <button type="button" class="icon-option" data-icon="bi-cup-hot">
+                                    <i class="bi bi-cup-hot"></i>
+                                </button>
+                                <button type="button" class="icon-option" data-icon="bi-cart">
+                                    <i class="bi bi-cart"></i>
+                                </button>
+                                <button type="button" class="icon-option" data-icon="bi-car-front">
+                                    <i class="bi bi-car-front"></i>
+                                </button>
+                                <button type="button" class="icon-option" data-icon="bi-house-door">
+                                    <i class="bi bi-house-door"></i>
+                                </button>
+                                <button type="button" class="icon-option" data-icon="bi-hospital">
+                                    <i class="bi bi-hospital"></i>
+                                </button>
+                                <button type="button" class="icon-option" data-icon="bi-airplane">
+                                    <i class="bi bi-airplane"></i>
+                                </button>
+                                <button type="button" class="icon-option" data-icon="bi-controller">
+                                    <i class="bi bi-controller"></i>
+                                </button>
+                                <button type="button" class="icon-option" data-icon="bi-suit-heart">
+                                    <i class="bi bi-suit-heart"></i>
+                                </button>
+                                <button type="button" class="icon-option" data-icon="bi-mortarboard">
+                                    <i class="bi bi-mortarboard"></i>
+                                </button>
+                                <button type="button" class="icon-option" data-icon="bi-gift">
+                                    <i class="bi bi-gift"></i>
+                                </button>
+                            </div>
+                            <input type="hidden" name="icon" id="selected_icon" value="bi-tag">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Category Tabs */
+    .nav-tabs .nav-link.active {
+        font-weight: 600;
+        border-bottom: 3px solid #0d6efd;
+    }
+
+    /* Category Section Titles */
+    .category-section-title {
+        margin-bottom: 1rem;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    /* Category Chips */
+    .category-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .category-chip {
+        display: flex;
+        align-items: center;
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .category-chip.income {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .category-chip i {
+        margin-right: 0.5rem;
+    }
+
+    .category-chip.system {
+        border: 1px dashed rgba(220, 53, 69, 0.3);
+    }
+
+    .category-chip.system.income {
+        border: 1px dashed rgba(40, 167, 69, 0.3);
+    }
+
+    .category-chip.custom {
+        border: none;
+        padding-right: 2.5rem;
+    }
+
+    .category-chip.custom:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .category-actions {
+        position: absolute;
+        right: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .btn-edit-category, .btn-delete-category {
+        background: none;
+        border: none;
+        color: #6c757d;
+        padding: 0.25rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .btn-edit-category:hover {
+        color: #0d6efd;
+    }
+
+    .btn-delete-category:hover {
+        color: #dc3545;
+    }
+
+    .category-chip-add {
+        display: flex;
+        align-items: center;
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        border: 1px dashed #6c757d;
+        cursor: pointer;
+    }
+
+    .category-chip-add.income {
+        background-color: rgba(40, 167, 69, 0.05);
+        color: #28a745;
+        border: 1px dashed #28a745;
+    }
+
+    .category-chip-add:hover {
+        background-color: rgba(108, 117, 125, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .category-chip-add.income:hover {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+
+    .category-chip-add i {
+        margin-right: 0.5rem;
+    }
+
+    /* Icon Selector */
+    .icon-selector {
+        margin-top: 0.5rem;
+    }
+
+    .icon-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .icon-option {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        background: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .icon-option:hover {
+        background-color: #f8f9fa;
+    }
+
+    .icon-option.selected {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+
+    /* Empty States */
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+
+    /* Tips Section */
+    .tip-card {
+        padding: 15px;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .tip-card:hover {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+
+    .tip-icon {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+</style>
+
+<script>
+    // Function to prepare the add category modal with the correct type
+    function prepareAddCategory(type) {
+        // Reset form
+        document.getElementById('categoryForm').reset();
+        document.getElementById('category_id').value = '';
+        document.getElementById('addCategoryModalLabel').textContent = 'Add New Category';
+
+        // Set the correct type
+        if (type === 'expense') {
+            document.getElementById('type-expense').checked = true;
+        } else {
+            document.getElementById('type-income').checked = true;
+        }
+
+        // Reset icon selection
+        document.querySelectorAll('.icon-option').forEach(icon => {
+            icon.classList.remove('selected');
+        });
+        document.querySelector('.icon-option[data-icon="bi-tag"]').classList.add('selected');
+        document.getElementById('selected_icon').value = 'bi-tag';
+
+        // Open modal
+        new bootstrap.Modal(document.getElementById('addCategoryModal')).show();
+    }
+
+    // Handle edit category button clicks
+    document.querySelectorAll('.btn-edit-category').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
+            const type = this.getAttribute('data-type');
+
+            // Set form values
+            document.getElementById('category_id').value = id;
+            document.getElementById('category_name').value = name;
+            document.getElementById('addCategoryModalLabel').textContent = 'Edit Category';
+
+            // Set type
+            if (type === 'expense') {
+                document.getElementById('type-expense').checked = true;
+            } else {
+                document.getElementById('type-income').checked = true;
+            }
+
+            // Open modal
+            new bootstrap.Modal(document.getElementById('addCategoryModal')).show();
+        });
+    });
+
+    // Handle icon selection
+    document.querySelectorAll('.icon-option').forEach(button => {
+        button.addEventListener('click', function() {
+            const icon = this.getAttribute('data-icon');
+
+            // Update selected class
+            document.querySelectorAll('.icon-option').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            this.classList.add('selected');
+
+            // Update hidden input
+            document.getElementById('selected_icon').value = icon;
+        });
+    });
+</script>
 {% endblock %}

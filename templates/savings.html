@@ -4,61 +4,504 @@
 {% block title %}Savings Goals{% endblock %}
 
 {% block content %}
+<!-- Header Section -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Savings Goals</h1>
-    <a href="{{ url_for('savings.add_savings_goal') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> Add Goal
+    <div>
+        <h1 class="mb-1">Savings Goals</h1>
+        <p class="text-muted mb-0">Track and achieve your financial goals</p>
+    </div>
+    <a href="{{ url_for('savings.add_savings_goal') }}" class="btn btn-info text-white">
+        <i class="bi bi-plus-lg me-2"></i>Add Goal
     </a>
 </div>
 
-{% if savings_goals %}
-<div class="row">
-    {% for goal in savings_goals %}
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">{{ goal.name }}</h5>
-            </div>
+<!-- Savings Summary Cards -->
+<div class="row mb-4">
+    <!-- Total Savings -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm savings-stat-card">
             <div class="card-body">
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>Progress:</span>
-                        <span>${{ "%.2f"|format(goal.current_amount) }} / ${{ "%.2f"|format(goal.target_amount) }}</span>
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon total-savings-icon me-3">
+                        <i class="bi bi-piggy-bank"></i>
                     </div>
-                    <div class="progress mt-2">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ (goal.current_amount / goal.target_amount) * 100 }}%"></div>
-                    </div>
-                    <div class="text-end mt-1">
-                        <small>{{ ((goal.current_amount / goal.target_amount) * 100)|round(1) }}% complete</small>
+                    <div>
+                        <h6 class="text-muted mb-1">Total Saved</h6>
+                        <h3 class="mb-0">
+                            ${% if total_saved is defined %}{{ "%.2f"|format(total_saved) }}{% else %}0.00{% endif %}
+                        </h3>
                     </div>
                 </div>
-
-                {% if goal.target_date %}
-                <div class="mb-3">
-                    <strong>Target Date:</strong> {{ goal.target_date.strftime('%Y-%m-%d') }}
-                </div>
-                {% endif %}
-
-                <form method="POST" action="{{ url_for('savings.update_savings_progress', id=goal.id) }}" class="mt-4">
-                    <div class="input-group">
-                        <span class="input-group-text">$</span>
-                        <input type="number" step="0.01" class="form-control" name="amount" placeholder="Add amount" required>
-                        <button type="submit" class="btn btn-success">Update Progress</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
-    {% endfor %}
+
+    <!-- Remaining to Goal -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm savings-stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon remaining-icon me-3">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Remaining to Goals</h6>
+                        <h3 class="mb-0">
+                            ${% if total_remaining is defined %}{{ "%.2f"|format(total_remaining) }}{% else %}0.00{% endif %}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overall Progress -->
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm savings-stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon progress-icon me-3">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Overall Progress</h6>
+                        <h3 class="mb-0">
+                            {% if overall_progress is defined %}{{ "%.1f"|format(overall_progress) }}%{% else %}0.0%{% endif %}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{% else %}
-<div class="alert alert-info">
-    <p>No savings goals set yet. Create your first savings goal!</p>
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Savings Goals List -->
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-trophy me-2"></i>Your Savings Goals
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if savings_goals %}
+                <div class="row">
+                    {% for goal in savings_goals %}
+                    <div class="col-md-6 mb-4">
+                        <div class="goal-card h-100">
+                            <div class="goal-header">
+                                <h5 class="goal-title">{{ goal.name }}</h5>
+                                {% set progress = (goal.current_amount / goal.target_amount) * 100 %}
+                                {% if progress >= 100 %}
+                                <span class="completed-badge"><i class="bi bi-check-circle-fill me-1"></i>Completed!</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="goal-amount mt-2">
+                                <div class="d-flex justify-content-between align-items-baseline">
+                                    <div class="current">
+                                        <span class="amount">${{ "%.2f"|format(goal.current_amount) }}</span>
+                                        <span class="text-muted small">current</span>
+                                    </div>
+                                    <div class="target text-end">
+                                        <span class="amount">${{ "%.2f"|format(goal.target_amount) }}</span>
+                                        <span class="text-muted small">target</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="progress-container mt-2">
+                                <div class="progress" style="height: 12px;">
+                                    <div class="progress-bar bg-info" role="progressbar"
+                                         style="width: {{ progress if progress <= 100 else 100 }}%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <span class="progress-label">{{ progress|round(1) }}% complete</span>
+
+                                    {% if goal.target_date %}
+                                        {% set days_left = (goal.target_date - now()).days %}
+                                        <span class="deadline-label">
+                                            {% if days_left > 0 %}
+                                                <i class="bi bi-clock me-1"></i>{{ days_left }} days left
+                                            {% else %}
+                                                <span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Overdue</span>
+                                            {% endif %}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if goal.target_date %}
+                            <div class="goal-date mt-3">
+                                <i class="bi bi-calendar-event me-1"></i>
+                                Target Date: <strong>{{ goal.target_date.strftime('%b %d, %Y') }}</strong>
+
+                                {% if days_left > 0 %}
+                                    {% set daily_needed = (goal.target_amount - goal.current_amount) / days_left if days_left > 0 else 0 %}
+                                    {% if daily_needed > 0 %}
+                                    <div class="daily-savings-tip mt-1">
+                                        <small>You need to save <strong>${{ "%.2f"|format(daily_needed) }}</strong> per day to reach your goal</small>
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            <div class="goal-actions mt-3">
+                                <form method="POST" action="{{ url_for('savings.update_savings_progress', id=goal.id) }}">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="bi bi-cash"></i></span>
+                                        <input type="number" step="0.01" min="0.01" class="form-control bg-light" name="amount" placeholder="Add amount" required>
+                                        <button type="submit" class="btn btn-info text-white">Update</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="goal-footer mt-3 d-flex justify-content-between">
+                                <a href="{{ url_for('savings.edit_savings_goal', id=goal.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil me-1"></i>Edit
+                                </a>
+                                <a href="{{ url_for('savings.delete_savings_goal', id=goal.id) }}" class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('Are you sure you want to delete this savings goal?')">
+                                    <i class="bi bi-trash me-1"></i>Delete
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <div class="empty-state-icon mb-3">
+                            <i class="bi bi-piggy-bank"></i>
+                        </div>
+                        <h5>No savings goals yet</h5>
+                        <p class="text-muted mb-4">Start by creating your first savings goal to track your progress.</p>
+
+                        <a href="{{ url_for('savings.add_savings_goal') }}" class="btn btn-info text-white">
+                            <i class="bi bi-plus-lg me-2"></i>Create Your First Goal
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Savings Insights and Tips -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-graph-up me-2"></i>Savings Progress
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if savings_goals %}
+                <div style="height: 250px; position: relative;">
+                    <canvas id="savingsProgressChart"></canvas>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <div class="empty-state-icon mb-3">
+                        <i class="bi bi-bar-chart"></i>
+                    </div>
+                    <p class="text-muted">Add goals to see your savings progress chart</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-lightbulb me-2"></i>Savings Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="savings-tips">
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h6>50/30/20 Rule</h6>
+                            <p class="small text-muted">Try to allocate 50% of income to needs, 30% to wants, and 20% to savings.</p>
+                        </div>
+                    </div>
+
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="bi bi-bank"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h6>Automate Your Savings</h6>
+                            <p class="small text-muted">Set up automatic transfers to your savings account on payday.</p>
+                        </div>
+                    </div>
+
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h6>Set Realistic Goals</h6>
+                            <p class="small text-muted">Start small and gradually increase your savings rate over time.</p>
+                        </div>
+                    </div>
+
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="bi bi-piggy-bank"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h6>Emergency Fund First</h6>
+                            <p class="small text-muted">Build an emergency fund covering 3-6 months of expenses before other goals.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="text-center mt-4">
-    <a href="{{ url_for('savings.add_savings_goal') }}" class="btn btn-primary btn-lg">
-        <i class="bi bi-plus-lg"></i> Create Your First Savings Goal
-    </a>
-</div>
-{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Stats Cards */
+    .savings-stat-card {
+        border-radius: 12px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .savings-stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .total-savings-icon {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+
+    .remaining-icon {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+
+    .progress-icon {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    /* Goal Cards */
+    .goal-card {
+        padding: 1.25rem;
+        border-radius: 12px;
+        background-color: #fff;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-left: 4px solid #17a2b8;
+    }
+
+    .goal-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+    }
+
+    .goal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .goal-title {
+        margin-bottom: 0;
+        font-weight: 600;
+    }
+
+    .completed-badge {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+        padding: 0.25rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .goal-amount .amount {
+        font-size: 1.25rem;
+        font-weight: 600;
+        display: block;
+    }
+
+    .progress-label, .deadline-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+
+    .daily-savings-tip {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+
+    /* Savings Tips */
+    .savings-tips {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .tip-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        transition: transform 0.3s ease;
+        padding: 0.5rem;
+        border-radius: 8px;
+    }
+
+    .tip-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+    }
+
+    .tip-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .tip-content {
+        flex-grow: 1;
+    }
+
+    .tip-content h6 {
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+    }
+
+    .tip-content p {
+        margin-bottom: 0;
+    }
+
+    /* Empty States */
+    .empty-state {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .empty-state-icon {
+        font-size: 48px;
+        color: #dee2e6;
+    }
+</style>
+
+<script>
+    {% if savings_goals %}
+    // Initialize the Savings Progress Chart
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('savingsProgressChart').getContext('2d');
+
+        // Prepare data for chart
+        const goalNames = [{% for goal in savings_goals %} '{{ goal.name }}', {% endfor %}];
+        const currentAmounts = [{% for goal in savings_goals %} {{ goal.current_amount }}, {% endfor %}];
+        const targetAmounts = [{% for goal in savings_goals %} {{ goal.target_amount }}, {% endfor %}];
+
+        // Calculate remaining amounts
+        const remainingAmounts = targetAmounts.map((target, index) => Math.max(0, target - currentAmounts[index]));
+
+        // Colors
+        const completedColor = 'rgba(23, 162, 184, 0.8)';
+        const remainingColor = 'rgba(222, 226, 230, 0.6)';
+
+        // Create the chart
+        const savingsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: goalNames,
+                datasets: [
+                    {
+                        label: 'Saved',
+                        data: currentAmounts,
+                        backgroundColor: completedColor,
+                        borderWidth: 0,
+                        borderRadius: 5,
+                    },
+                    {
+                        label: 'Remaining',
+                        data: remainingAmounts,
+                        backgroundColor: remainingColor,
+                        borderWidth: 0,
+                        borderRadius: {
+                            topLeft: 0,
+                            topRight: 5,
+                            bottomRight: 5,
+                            bottomLeft: 0
+                        },
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: $${context.formattedValue}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    });
+    {% endif %}
+</script>
 {% endblock %}

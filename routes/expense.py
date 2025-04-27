@@ -3,8 +3,10 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from datetime import datetime, timedelta
 from extensions import db
 from models import Expense
+from sqlalchemy import func
 
 expense_bp = Blueprint('expense', __name__)
+
 
 @expense_bp.route('/expenses')
 def expenses():
@@ -46,6 +48,36 @@ def expenses():
     # Execute query with order
     expenses = query.order_by(Expense.date.desc()).all()
 
+    # Calculate expense statistics for the current month
+    today = datetime.now()
+    start_of_month = datetime(today.year, today.month, 1)
+    if today.month == 12:
+        end_of_month = datetime(today.year + 1, 1, 1)
+    else:
+        end_of_month = datetime(today.year, today.month + 1, 1)
+
+    # Monthly total
+    month_expenses = Expense.query.filter_by(user_id=user_id).filter(
+        Expense.date >= start_of_month,
+        Expense.date < end_of_month
+    ).all()
+    monthly_total = sum(expense.amount for expense in month_expenses)
+
+    # Daily average
+    days_in_month = (end_of_month - start_of_month).days
+    days_passed = min((today - start_of_month).days + 1, days_in_month)
+    daily_avg = monthly_total / days_passed if days_passed > 0 else 0
+
+    # Top category
+    category_totals = {}
+    for expense in month_expenses:
+        if expense.category in category_totals:
+            category_totals[expense.category] += expense.amount
+        else:
+            category_totals[expense.category] = expense.amount
+
+    top_category = max(category_totals.items(), key=lambda x: x[1])[0] if category_totals else "None"
+
     return render_template('expenses.html',
                            expenses=expenses,
                            categories=categories,
@@ -54,7 +86,10 @@ def expenses():
                            filter_max_amount=max_amount,
                            filter_start_date=start_date,
                            filter_end_date=end_date,
-                           filter_search=search_term)
+                           filter_search=search_term,
+                           monthly_total=monthly_total,
+                           daily_avg=daily_avg,
+                           top_category=top_category)
 
 
 @expense_bp.route('/expenses/add', methods=['GET', 'POST'])

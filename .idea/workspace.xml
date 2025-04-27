@@ -5,20 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ff390ee1-19a1-4571-985b-2fef85b9792a" name="Changes" comment="init">
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/edit_savings_goal.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/instance/money_manager.db" beforeDir="false" afterPath="$PROJECT_DIR$/instance/money_manager.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/auth.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/budget.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/budget.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/category.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/category.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/dashboard.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/expense.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/expense.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/income.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/income.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/recurring.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/recurring.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/savings.py" beforeDir="false" afterPath="$PROJECT_DIR$/routes/savings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/budgets.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/budgets.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/categories.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/categories.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/expenses.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/expenses.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/incomes.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/incomes.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/recurring.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/recurring.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/savings.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/savings.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,22 +40,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.app.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "C:/Users/ormet/OneDrive/Desktop",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.app.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/ormet/OneDrive/Desktop&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\ormet\OneDrive\Desktop\raha2\templates" />
@@ -106,7 +107,8 @@
       <option name="presentableId" value="Default" />
       <updated>1745517909466</updated>
       <workItem from="1745517911640" duration="3003000" />
-      <workItem from="1745650991193" duration="3257000" />
+      <workItem from="1745650991193" duration="3455000" />
+      <workItem from="1745760715395" duration="2919000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -132,7 +134,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745654392244</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="init">
+      <option name="closed" value="true" />
+      <created>1745655119493</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1745655119493</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -154,6 +164,6 @@
     <option name="LAST_COMMIT_MESSAGE" value="init" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/raha2$app.coverage" NAME="app Coverage Results" MODIFIED="1745654796634" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/raha2$app.coverage" NAME="app Coverage Results" MODIFIED="1745761324489" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
